@@ -1,20 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.28;
 
-import {Test} from "forge-std/src/Test.sol";
-import {PacUSD} from "../src/PacUSD.sol";
-import {MockSupraPriceFeeds} from "./mocks/MockSupraPriceFeeds.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
+import { Test } from "forge-std/src/Test.sol";
+import { PacUSD } from "../src/PacUSD.sol";
+import { MockSupraPriceFeeds } from "./mocks/MockSupraPriceFeeds.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
 
 contract PacUSDTest is Test {
     uint256 constant SHARES_PER_TOKEN_PRECISION = 1e18;
     // Events for checking invariants
+
     event SupplyChanged(uint256 oldSupply, uint256 newSupply);
     event SharesChanged(uint256 oldShares, uint256 newShares);
+
     PacUSD public pacUsd;
     MockSupraPriceFeeds public priceFeeds;
     MockERC20 public pacMMFWrapper;
-    
+
     address public alice = makeAddr("alice");
     address public bob = makeAddr("bob");
     bytes32 public constant PAIR_ID = bytes32("MMF/USD");
@@ -31,13 +33,9 @@ contract PacUSDTest is Test {
         // Setup initial state
         priceFeeds.setPrice(BASE_PRICE);
         pacMMFWrapper = new MockERC20("PAC MMF Wrapper", "wPacMMF", 18);
-        
+
         // Deploy PacUSD contract
-        pacUsd = new PacUSD(
-            address(pacMMFWrapper),
-            address(priceFeeds),
-            PAIR_ID
-        );
+        pacUsd = new PacUSD(address(pacMMFWrapper), address(priceFeeds), PAIR_ID);
 
         pacMMFWrapper.mint(alice, INITIAL_BALANCE);
         pacMMFWrapper.mint(bob, INITIAL_BALANCE);
@@ -59,7 +57,7 @@ contract PacUSDTest is Test {
 
     function test_FirstMint() public {
         uint256 mintAmount = 100e18;
-        
+
         vm.startPrank(alice);
         vm.expectEmit(true, true, true, true);
         emit Mint(alice, mintAmount, mintAmount);
@@ -73,7 +71,7 @@ contract PacUSDTest is Test {
 
     function test_MintAndBurn() public {
         uint256 mintAmount = 100e18;
-        
+
         // Mint
         vm.startPrank(alice);
         pacUsd.mint(mintAmount);
@@ -94,7 +92,7 @@ contract PacUSDTest is Test {
     function test_Transfer() public {
         uint256 mintAmount = 100e18;
         uint256 transferAmount = 30e18;
-        
+
         // Mint
         vm.prank(alice);
         pacUsd.mint(mintAmount);
@@ -109,7 +107,7 @@ contract PacUSDTest is Test {
 
     function test_RebaseUpward() public {
         uint256 mintAmount = 100e18;
-        
+
         // Mint initial tokens
         vm.prank(alice);
         pacUsd.mint(mintAmount);
@@ -129,7 +127,7 @@ contract PacUSDTest is Test {
 
     function test_RebaseDownward() public {
         uint256 mintAmount = 100e18;
-        
+
         // Mint initial tokens
         vm.prank(alice);
         pacUsd.mint(mintAmount);
@@ -167,7 +165,7 @@ contract PacUSDTest is Test {
 
     function test_RebaseMultipleTimesHighPrice() public {
         uint256 mintAmount = 100e18;
-        
+
         // Mint initial tokens
         vm.prank(alice);
         pacUsd.mint(mintAmount);
@@ -239,10 +237,9 @@ contract PacUSDTest is Test {
         pacUsd.unpause();
     }
 
-
     function test_RebaseNoChange() public {
         uint256 mintAmount = 100e18;
-        
+
         // Mint initial tokens
         vm.prank(alice);
         pacUsd.mint(mintAmount);
@@ -272,31 +269,31 @@ contract PacUSDTest is Test {
     /// @notice Fuzz test mint and burn operations
     function testFuzz_MintAndBurn(uint256 mintAmount, uint256 burnAmount) public {
         // Bound the input to reasonable values and avoid overflow
-        mintAmount = bound(mintAmount, 1e18, 1_000e18);
-        
+        mintAmount = bound(mintAmount, 1e18, 1000e18);
+
         vm.startPrank(alice);
-        
+
         // Record initial state
         uint256 initialBalance = pacMMFWrapper.balanceOf(alice);
-        
+
         // Mint
         pacMMFWrapper.approve(address(pacUsd), mintAmount);
         pacUsd.mint(mintAmount);
-        
+
         // Bound burn amount to what we have
         uint256 balance = pacUsd.balanceOf(alice);
         burnAmount = bound(burnAmount, 0, balance);
-        
+
         // Skip time to allow rebase
         skip(24 hours);
-        
+
         // Burn
         if (burnAmount > 0) {
             pacUsd.burn(burnAmount);
         }
-        
+
         vm.stopPrank();
-        
+
         // Check invariants
         assertGe(pacUsd.totalSupply(), 0, "Total supply should never be negative");
         assertGe(pacUsd.totalSupply(), 0, "Total supply should never be negative");
@@ -311,20 +308,20 @@ contract PacUSDTest is Test {
         pacMMFWrapper.approve(address(pacUsd), mintAmount);
         pacUsd.mint(mintAmount);
         vm.stopPrank();
-        
+
         // Bound transfer amount
         amount = bound(amount, 0, pacUsd.balanceOf(alice));
-        
+
         // Record balances before transfer
         uint256 aliceBalanceBefore = pacUsd.balanceOf(alice);
         uint256 bobBalanceBefore = pacUsd.balanceOf(bob);
-        
+
         // Transfer
         vm.prank(alice);
         if (amount > 0) {
             pacUsd.transfer(bob, amount);
         }
-        
+
         // Check invariants
         assertEq(pacUsd.balanceOf(alice), aliceBalanceBefore - amount, "Alice balance incorrect");
         assertEq(pacUsd.balanceOf(bob), bobBalanceBefore + amount, "Bob balance incorrect");
@@ -339,34 +336,34 @@ contract PacUSDTest is Test {
         pacMMFWrapper.approve(address(pacUsd), mintAmount);
         pacUsd.mint(mintAmount);
         vm.stopPrank();
-        
+
         // Bound price to reasonable values (0.5 USD to 2 USD)
         newPrice = bound(newPrice, 1.1e8, 2e8);
-        
+
         // Skip time to allow rebase
         skip(24 hours);
-        
+
         // Set new price
         priceFeeds.setPrice(newPrice);
-        
+
         // Record state before rebase
         uint256 supplyBefore = pacUsd.totalSupply();
-        
+
         // Print initial state
         emit log_named_uint("BASE_PRICE", BASE_PRICE);
         emit log_named_uint("newPrice", newPrice);
         emit log_named_uint("supplyBefore", supplyBefore);
-        
+
         // Rebase
         pacUsd.rebase();
-        
+
         // Print final state
         uint256 supplyAfter = pacUsd.totalSupply();
         emit log_named_uint("supplyAfter", supplyAfter);
-        
+
         // Check invariants
         assertGe(pacUsd.totalSupply(), 0, "Total supply should never be negative");
-        
+
         // Check price-supply relationship
         // If price increases, supply should increase and vice versa
         if (newPrice > BASE_PRICE) {
@@ -381,19 +378,19 @@ contract PacUSDTest is Test {
     /// @notice Fuzz test share calculation
     function testFuzz_ShareCalculation(uint256 amount) public {
         // Bound amount to reasonable values
-        amount = bound(amount, 1e18, 1_000e18);
-        
+        amount = bound(amount, 1e18, 1000e18);
+
         vm.startPrank(alice);
         pacMMFWrapper.approve(address(pacUsd), amount);
-        
+
         // Mint
         pacUsd.mint(amount);
-        
+
         // Check share calculation
         uint256 balance = pacUsd.balanceOf(alice);
         assertGt(balance, 0, "Balance should be positive");
         assertEq(balance, amount, "Balance should match mint amount");
-        
+
         vm.stopPrank();
     }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.28;
 
-import {ISupraPriceFeeds} from "../../src/interfaces/ISupraPriceFeeds.sol";
+import { ISupraPriceFeeds } from "../../src/interfaces/ISupraPriceFeeds.sol";
 
 contract MockSupraPriceFeeds is ISupraPriceFeeds {
     uint256 private _price;

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/src/Test.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {PacUSDMinter} from "../src/PacUSDMinter.sol";
-import {PacUSD} from "../src/PacUSD.sol";
-import {ERC20Wrapper} from "../src/ERC20Wrapper.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
-import {MockSupraPriceFeeds} from "./mocks/MockSupraPriceFeeds.sol";
+import { Test } from "forge-std/src/Test.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { PacUSDMinter } from "../src/PacUSDMinter.sol";
+import { PacUSD } from "../src/PacUSD.sol";
+import { ERC20Wrapper } from "../src/ERC20Wrapper.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
+import { MockSupraPriceFeeds } from "./mocks/MockSupraPriceFeeds.sol";
 
 contract PacUSDMinterTest is Test {
     PacUSDMinter public minter;
@@ -27,25 +27,13 @@ contract PacUSDMinterTest is Test {
         priceFeeds = new MockSupraPriceFeeds();
 
         // Deploy wrapper
-        pacMMFWrapper = new ERC20Wrapper(
-            IERC20(address(pacMMF)),
-            "Wrapped PAC MMF",
-            "wMMF"
-        );
+        pacMMFWrapper = new ERC20Wrapper(IERC20(address(pacMMF)), "Wrapped PAC MMF", "wMMF");
 
         // Deploy PacUSD
-        pacUsd = new PacUSD(
-            address(pacMMFWrapper),
-            address(priceFeeds),
-            PAIR_ID
-        );
+        pacUsd = new PacUSD(address(pacMMFWrapper), address(priceFeeds), PAIR_ID);
 
         // Deploy minter
-        minter = new PacUSDMinter(
-            address(pacMMF),
-            address(pacMMFWrapper),
-            address(pacUsd)
-        );
+        minter = new PacUSDMinter(address(pacMMF), address(pacMMFWrapper), address(pacUsd));
 
         // Setup initial state
         priceFeeds.setPrice(BASE_PRICE);
@@ -59,7 +47,7 @@ contract PacUSDMinterTest is Test {
 
     function test_WrapAndMint() public {
         uint256 amount = 100e18;
-        
+
         vm.startPrank(alice);
         minter.wrapAndMint(amount);
         vm.stopPrank();

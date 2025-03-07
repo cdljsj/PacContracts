@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.28;
 
-import {Test} from "forge-std/src/Test.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
-import {ERC20Wrapper} from "../src/ERC20Wrapper.sol";
+import { Test } from "forge-std/src/Test.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
+import { ERC20Wrapper } from "../src/ERC20Wrapper.sol";
 
 contract ERC20WrapperTest is Test {
     MockERC20 public underlying;
@@ -27,7 +27,7 @@ contract ERC20WrapperTest is Test {
         // Approve wrapper contract
         vm.prank(alice);
         underlying.approve(address(wrapper), type(uint256).max);
-        
+
         vm.prank(bob);
         underlying.approve(address(wrapper), type(uint256).max);
     }
@@ -41,7 +41,7 @@ contract ERC20WrapperTest is Test {
 
     function test_Deposit() public {
         uint256 amount = 100e18;
-        
+
         vm.prank(alice);
         vm.expectEmit(true, false, false, true);
         emit Deposit(alice, amount);
@@ -54,7 +54,7 @@ contract ERC20WrapperTest is Test {
 
     function test_DepositFor() public {
         uint256 amount = 100e18;
-        
+
         vm.prank(alice);
         vm.expectEmit(true, false, false, true);
         emit Deposit(alice, amount);
@@ -68,7 +68,7 @@ contract ERC20WrapperTest is Test {
     function test_Withdraw() public {
         uint256 depositAmount = 100e18;
         uint256 withdrawAmount = 60e18;
-        
+
         // First deposit
         vm.prank(alice);
         wrapper.deposit(depositAmount);
@@ -87,7 +87,7 @@ contract ERC20WrapperTest is Test {
     function test_WithdrawTo() public {
         uint256 depositAmount = 100e18;
         uint256 withdrawAmount = 60e18;
-        
+
         // First deposit
         vm.prank(alice);
         wrapper.deposit(depositAmount);
@@ -116,7 +116,7 @@ contract ERC20WrapperTest is Test {
 
     function test_RevertInsufficientBalance() public {
         uint256 depositAmount = 100e18;
-        
+
         vm.prank(alice);
         wrapper.deposit(depositAmount);
 
@@ -127,7 +127,7 @@ contract ERC20WrapperTest is Test {
 
     function test_UnderlyingBalance() public {
         uint256 amount = 100e18;
-        
+
         vm.prank(alice);
         wrapper.deposit(amount);
 

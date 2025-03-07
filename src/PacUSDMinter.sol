@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {PacUSD} from "./PacUSD.sol";
-import {ERC20Wrapper} from "./ERC20Wrapper.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { PacUSD } from "./PacUSD.sol";
+import { ERC20Wrapper } from "./ERC20Wrapper.sol";
 
 /**
  * @title PacUSDMinter
@@ -22,18 +22,9 @@ contract PacUSDMinter is ReentrancyGuard {
     error ApprovalFailed();
 
     // Events
-    event OneStepMint(
-        address indexed user,
-        uint256 pacMMFAmount,
-        uint256 wrappedAmount,
-        uint256 pacUsdAmount
-    );
+    event OneStepMint(address indexed user, uint256 pacMMFAmount, uint256 wrappedAmount, uint256 pacUsdAmount);
 
-    constructor(
-        address _pacMMF,
-        address _pacMMFWrapper,
-        address _pacUsd
-    ) {
+    constructor(address _pacMMF, address _pacMMFWrapper, address _pacUsd) {
         pacMMF = IERC20(_pacMMF);
         pacMMFWrapper = ERC20Wrapper(_pacMMFWrapper);
         pacUsd = PacUSD(_pacUsd);

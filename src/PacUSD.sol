@@ -1,24 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ISupraPriceFeeds} from "./interfaces/ISupraPriceFeeds.sol";
-import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ISupraPriceFeeds } from "./interfaces/ISupraPriceFeeds.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * @title PacUSD Stablecoin
  * @notice A rebasing stablecoin that maintains its peg through wrapper token collateral
  */
-contract PacUSD is 
-    ERC20Permit,
-    ReentrancyGuard,
-    Pausable,
-    AccessControl
-{
+contract PacUSD is ERC20Permit, ReentrancyGuard, Pausable, AccessControl {
     // Custom Errors
     error ZeroAmount();
     error InsufficientBalance(address user, uint256 required, uint256 available);
@@ -31,15 +26,16 @@ contract PacUSD is
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     // State variables
-    IERC20 public immutable pacMMFWrapper;  // The wrapped MMF token used as collateral
-    ISupraPriceFeeds public immutable priceFeeds;  // Supra price oracle
-    bytes32 public immutable pairId;  // Supra pair ID for price feed
-    
-    uint256 public constant PRICE_DECIMALS = 8;  // Supra price feed decimals
+    IERC20 public immutable pacMMFWrapper; // The wrapped MMF token used as collateral
+    ISupraPriceFeeds public immutable priceFeeds; // Supra price oracle
+    bytes32 public immutable pairId; // Supra pair ID for price feed
+
+    uint256 public constant PRICE_DECIMALS = 8; // Supra price feed decimals
 
     uint256 private _sharesPerToken;
-    uint256 private _lastRebasePrice;  // Last price when rebase was called
-    uint256 private constant SHARES_PER_TOKEN_PRECISION = 1e27;  // Base shares unit per token, large enough for precision but small enough to prevent overflow
+    uint256 private _lastRebasePrice; // Last price when rebase was called
+    uint256 private constant SHARES_PER_TOKEN_PRECISION = 1e27; // Base shares unit per token, large enough for
+        // precision but small enough to prevent overflow
 
     // Events
     event Mint(address indexed user, uint256 collateralAmount, uint256 pacUsdAmount);
@@ -55,21 +51,22 @@ contract PacUSD is
         address _pacMMF,
         address _priceFeeds,
         bytes32 _pairId
-    ) ERC20("PAC USD Stablecoin", "PacUSD") ERC20Permit("PAC USD Stablecoin") {
+    )
+        ERC20("PAC USD Stablecoin", "PacUSD")
+        ERC20Permit("PAC USD Stablecoin")
+    {
         pacMMFWrapper = IERC20(_pacMMF);
         priceFeeds = ISupraPriceFeeds(_priceFeeds);
         pairId = _pairId;
         _totalSupply = 0;
-        _totalShares = 0;  // Initial total shares should also be 0
-        _sharesPerToken = SHARES_PER_TOKEN_PRECISION;  // This value will be recalculated on first mint
-        _lastRebasePrice = getPacMMFPrice();  // Use actual initial price
+        _totalShares = 0; // Initial total shares should also be 0
+        _sharesPerToken = SHARES_PER_TOKEN_PRECISION; // This value will be recalculated on first mint
+        _lastRebasePrice = getPacMMFPrice(); // Use actual initial price
 
         // Setup access control
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
     }
-
-
 
     /**
      * @notice Get the current price of pacMMF in USD from Supra oracle
@@ -108,14 +105,14 @@ contract PacUSD is
      */
     function mint(uint256 collateralAmount) external nonReentrant whenNotPaused returns (uint256) {
         if (collateralAmount == 0) revert ZeroAmount();
-        
+
         uint256 mintAmount = calculateMintAmount(collateralAmount);
         if (mintAmount == 0) revert ZeroAmount();
 
         // Transfer collateral first
         if (!pacMMFWrapper.transferFrom(msg.sender, address(this), collateralAmount)) revert TransferFailed();
-        
-        // Mint PacUSD using internal shares        
+
+        // Mint PacUSD using internal shares
         uint256 shareAmount = mintAmount * _sharesPerToken;
         if (shareAmount / _sharesPerToken != mintAmount) {
             revert ShareCalculationOverflow(mintAmount, _sharesPerToken);
@@ -123,7 +120,7 @@ contract PacUSD is
         _totalShares += shareAmount;
         _shares[msg.sender] += shareAmount;
         _totalSupply += mintAmount;
-        
+
         emit Mint(msg.sender, collateralAmount, mintAmount);
         emit Transfer(address(0), msg.sender, mintAmount);
 
@@ -155,10 +152,10 @@ contract PacUSD is
         }
         _shares[msg.sender] -= shareAmount;
         _totalSupply -= pacUsdAmount;
-        
+
         // Transfer collateral
         if (!pacMMFWrapper.transfer(msg.sender, collateralAmount)) revert TransferFailed();
-        
+
         emit Burn(msg.sender, pacUsdAmount, collateralAmount);
         emit Transfer(msg.sender, address(0), pacUsdAmount);
     }
@@ -184,20 +181,20 @@ contract PacUSD is
         }
 
         uint256 oldTotalSupply = _totalSupply;
-        
+
         // If price has changed since last rebase, calculate new total supply
         if (currentPrice != _lastRebasePrice) {
             // Calculate the percentage change in price
             // For example, if price increased from 1.0 to 1.2 USD, we need to increase supply by 20%
             // If price decreased from 1.0 to 0.8 USD, we need to decrease supply by 20%
             uint256 newTotalSupply = (oldTotalSupply * currentPrice) / _lastRebasePrice;
-            
+
             // Only update if the new supply is different (accounting for rounding)
             if (newTotalSupply != oldTotalSupply) {
                 uint256 oldSharesPerToken = _sharesPerToken;
                 _totalSupply = newTotalSupply;
                 _sharesPerToken = _totalShares / _totalSupply;
-                
+
                 emit Rebase(oldTotalSupply, newTotalSupply, oldSharesPerToken, _sharesPerToken);
             }
 
@@ -255,6 +252,4 @@ contract PacUSD is
         if (!hasRole(PAUSER_ROLE, msg.sender)) revert NotAuthorized();
         _unpause();
     }
-
-
 }

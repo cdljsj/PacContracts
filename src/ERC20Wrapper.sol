@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.28;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { ERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 /**
  * @title ERC20Wrapper
@@ -28,7 +28,10 @@ contract ERC20Wrapper is ERC20Permit, ReentrancyGuard {
         IERC20 _underlyingToken,
         string memory name,
         string memory symbol
-    ) ERC20(name, symbol) ERC20Permit(name) {
+    )
+        ERC20(name, symbol)
+        ERC20Permit(name)
+    {
         underlyingToken = _underlyingToken;
         _underlyingDecimals = ERC20(address(_underlyingToken)).decimals();
     }
@@ -47,7 +50,7 @@ contract ERC20Wrapper is ERC20Permit, ReentrancyGuard {
      */
     function deposit(uint256 amount) external nonReentrant {
         if (amount == 0) revert ZeroAmount();
-        
+
         _deposit(msg.sender, msg.sender, amount);
     }
 
@@ -59,7 +62,7 @@ contract ERC20Wrapper is ERC20Permit, ReentrancyGuard {
      */
     function depositFor(address from, address to, uint256 amount) external nonReentrant {
         if (amount == 0) revert ZeroAmount();
-        
+
         _deposit(from, to, amount);
     }
 
@@ -69,7 +72,7 @@ contract ERC20Wrapper is ERC20Permit, ReentrancyGuard {
      */
     function withdraw(uint256 amount) external nonReentrant {
         if (amount == 0) revert ZeroAmount();
-        
+
         _withdraw(msg.sender, msg.sender, amount);
     }
 
@@ -80,7 +83,7 @@ contract ERC20Wrapper is ERC20Permit, ReentrancyGuard {
      */
     function withdrawTo(address to, uint256 amount) external nonReentrant {
         if (amount == 0) revert ZeroAmount();
-        
+
         _withdraw(msg.sender, to, amount);
     }
 
@@ -97,7 +100,7 @@ contract ERC20Wrapper is ERC20Permit, ReentrancyGuard {
     function _deposit(address from, address to, uint256 amount) internal {
         underlyingToken.safeTransferFrom(from, address(this), amount);
         _mint(to, amount);
-        
+
         emit Deposit(from, amount);
     }
 
@@ -106,10 +109,10 @@ contract ERC20Wrapper is ERC20Permit, ReentrancyGuard {
      */
     function _withdraw(address from, address to, uint256 amount) internal {
         if (balanceOf(from) < amount) revert InsufficientBalance();
-        
+
         _burn(from, amount);
         underlyingToken.safeTransfer(to, amount);
-        
+
         emit Withdraw(to, amount);
     }
 }

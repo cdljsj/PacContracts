@@ -28,7 +28,7 @@
     "clean": "rm -rf cache out",
     "build": "forge build",
     "lint": "npm run lint:sol && npm run prettier:check",
-    "lint:sol": "forge fmt --check && npx solhint \"{script,src,tests}/**/*.sol\"",
+    "lint:sol": "forge fmt --check && npx solhint 'script/**/*.sol' 'src/**/*.sol' 'tests/**/*.sol'",
     "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
     "test": "forge test",
