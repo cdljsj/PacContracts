@@ -19,8 +19,16 @@ jobs:
       - name: "Update package.json"
         env:
           GITHUB_REPOSITORY_DESCRIPTION: ${{ github.event.repository.description }}
-        run:
-          ./.github/scripts/rename.sh "$GITHUB_REPOSITORY" "$GITHUB_REPOSITORY_OWNER" "$GITHUB_REPOSITORY_DESCRIPTION"
+        run: |
+          # Install jq if not already installed
+          sudo apt-get update && sudo apt-get install -y jq
+          
+          # Update package.json
+          jq --arg name "@$GITHUB_REPOSITORY_OWNER/$(basename $GITHUB_REPOSITORY)" \
+             --arg desc "$GITHUB_REPOSITORY_DESCRIPTION" \
+             --arg url "https://github.com/$GITHUB_REPOSITORY_OWNER" \
+             '.name = $name | .description = $desc | .author.name = $GITHUB_REPOSITORY_OWNER | .author.url = $url' \
+             package.json > package.json.tmp && mv package.json.tmp package.json
 
       - name: "Add rename summary"
         run: |
