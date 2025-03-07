@@ -8,6 +8,7 @@ import { PacUSD } from "../src/PacUSD.sol";
 import { ERC20Wrapper } from "../src/ERC20Wrapper.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
 import { MockSupraPriceFeeds } from "./mocks/MockSupraPriceFeeds.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract PacUSDMinterTest is Test {
     PacUSDMinter public minter;
@@ -29,8 +30,26 @@ contract PacUSDMinterTest is Test {
         // Deploy wrapper
         pacMMFWrapper = new ERC20Wrapper(IERC20(address(pacMMF)), "Wrapped PAC MMF", "wMMF");
 
-        // Deploy PacUSD
-        pacUsd = new PacUSD(address(pacMMFWrapper), address(priceFeeds), PAIR_ID);
+        // Deploy PacUSD implementation contract
+        PacUSD implementation = new PacUSD();
+        
+        // Prepare initialization data
+        bytes memory initData = abi.encodeWithSelector(
+            PacUSD.initialize.selector,
+            address(pacMMFWrapper),
+            address(priceFeeds),
+            PAIR_ID,
+            address(this)
+        );
+        
+        // Deploy proxy contract pointing to the implementation
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(implementation),
+            initData
+        );
+        
+        // Cast proxy to PacUSD interface
+        pacUsd = PacUSD(address(proxy));
 
         // Deploy minter
         minter = new PacUSDMinter(address(pacMMF), address(pacMMFWrapper), address(pacUsd));

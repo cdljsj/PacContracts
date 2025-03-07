@@ -5,6 +5,9 @@ import { Test } from "forge-std/src/Test.sol";
 import { PacUSD } from "../src/PacUSD.sol";
 import { MockSupraPriceFeeds } from "./mocks/MockSupraPriceFeeds.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract PacUSDTest is Test {
     uint256 constant SHARES_PER_TOKEN_PRECISION = 1e18;
@@ -34,8 +37,26 @@ contract PacUSDTest is Test {
         priceFeeds.setPrice(BASE_PRICE);
         pacMMFWrapper = new MockERC20("PAC MMF Wrapper", "wPacMMF", 18);
 
-        // Deploy PacUSD contract
-        pacUsd = new PacUSD(address(pacMMFWrapper), address(priceFeeds), PAIR_ID);
+        // Deploy PacUSD implementation contract
+        PacUSD implementation = new PacUSD();
+        
+        // Prepare initialization data
+        bytes memory initData = abi.encodeWithSelector(
+            PacUSD.initialize.selector,
+            address(pacMMFWrapper),
+            address(priceFeeds),
+            PAIR_ID,
+            address(this)
+        );
+        
+        // Deploy proxy contract pointing to the implementation
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(implementation),
+            initData
+        );
+        
+        // Cast proxy to PacUSD interface
+        pacUsd = PacUSD(address(proxy));
 
         pacMMFWrapper.mint(alice, INITIAL_BALANCE);
         pacMMFWrapper.mint(bob, INITIAL_BALANCE);
@@ -392,5 +413,131 @@ contract PacUSDTest is Test {
         assertEq(balance, amount, "Balance should match mint amount");
 
         vm.stopPrank();
+    }
+
+    /// @notice Test contract upgradeability
+    function test_UpgradeContract() public {
+        // Deploy a new implementation
+        PacUSD newImplementation = new PacUSD();
+        
+        // Mint some tokens before upgrade
+        uint256 mintAmount = 100e18;
+        vm.prank(alice);
+        pacUsd.mint(mintAmount);
+        
+        // Verify initial state
+        assertEq(pacUsd.totalSupply(), mintAmount);
+        assertEq(pacUsd.balanceOf(alice), mintAmount);
+        
+        // Upgrade to new implementation
+        vm.prank(address(this)); // Admin role
+        UUPSUpgradeable(address(pacUsd)).upgradeToAndCall(address(newImplementation), "");
+        
+        // Verify state is preserved after upgrade
+        assertEq(pacUsd.totalSupply(), mintAmount);
+        assertEq(pacUsd.balanceOf(alice), mintAmount);
+        
+        // Verify functionality still works after upgrade
+        vm.prank(alice);
+        pacUsd.transfer(bob, mintAmount / 2);
+        
+        assertEq(pacUsd.balanceOf(alice), mintAmount / 2);
+        assertEq(pacUsd.balanceOf(bob), mintAmount / 2);
+        
+        // Verify version constant after upgrade
+        assertEq(pacUsd.VERSION(), "1.0.0");
+    }
+    
+    /// @notice Test version constant
+    function test_VersionConstant() public {
+        // Check version constant
+        assertEq(pacUsd.VERSION(), "1.0.0", "Version constant should be 1.0.0");
+        
+        // Test log version function
+        vm.prank(address(this)); // Admin role
+        pacUsd.logVersion();
+        
+        // Non-admin should not be able to log version
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSignature("NotAuthorized()"));
+        pacUsd.logVersion();
+    }
+    
+    /// @notice Test unauthorized upgrade attempt
+    function test_UnauthorizedUpgrade() public {
+        // Deploy a new implementation
+        PacUSD newImplementation = new PacUSD();
+        
+        // Non-admin should not be able to upgrade
+        vm.prank(alice);
+        vm.expectRevert();
+        UUPSUpgradeable(address(pacUsd)).upgradeToAndCall(address(newImplementation), "");
+    }
+    
+    /// @notice Test upgrade with version logging
+    function test_UpgradeWithVersionLogging() public {
+        // Deploy a new implementation with a mock different version
+        // In a real scenario, this would be a new implementation with a different VERSION constant
+        PacUSD newImplementation = new PacUSD();
+        
+        // Mint some tokens before upgrade
+        uint256 mintAmount = 100e18;
+        vm.prank(alice);
+        pacUsd.mint(mintAmount);
+        
+        // Upgrade to new implementation
+        vm.startPrank(address(this)); // Admin role
+        UUPSUpgradeable(address(pacUsd)).upgradeToAndCall(address(newImplementation), "");
+        
+        // Log version after upgrade
+        pacUsd.logVersion();
+        vm.stopPrank();
+        
+        // After upgrade, the VERSION constant should still be the same since we're using the same implementation code
+        // In a real upgrade scenario with a new implementation, VERSION would be different
+        assertEq(pacUsd.VERSION(), "1.0.0", "VERSION should match the implementation's constant");
+        
+        // Verify state is preserved after upgrade
+        assertEq(pacUsd.totalSupply(), mintAmount);
+        assertEq(pacUsd.balanceOf(alice), mintAmount);
+    }
+    
+    /// @notice Test multiple upgrades in sequence
+    function test_MultipleUpgrades() public {
+        // First upgrade
+        PacUSD implementation1 = new PacUSD();
+        
+        // Mint tokens
+        uint256 mintAmount = 100e18;
+        vm.prank(alice);
+        pacUsd.mint(mintAmount);
+        
+        // First upgrade
+        vm.startPrank(address(this));
+        UUPSUpgradeable(address(pacUsd)).upgradeToAndCall(address(implementation1), "");
+        pacUsd.logVersion(); // Log the version after upgrade
+        vm.stopPrank();
+        
+        // Verify state after first upgrade
+        assertEq(pacUsd.VERSION(), "1.0.0"); // In a real scenario with different implementations, this would be different
+        assertEq(pacUsd.totalSupply(), mintAmount);
+        
+        // Second upgrade
+        PacUSD implementation2 = new PacUSD();
+        
+        // Add more tokens before second upgrade
+        vm.prank(alice);
+        pacUsd.mint(mintAmount);
+        
+        // Second upgrade
+        vm.startPrank(address(this));
+        UUPSUpgradeable(address(pacUsd)).upgradeToAndCall(address(implementation2), "");
+        pacUsd.logVersion(); // Log the version after upgrade
+        vm.stopPrank();
+        
+        // Verify state after second upgrade
+        assertEq(pacUsd.VERSION(), "1.0.0"); // In a real scenario with different implementations, this would be different
+        assertEq(pacUsd.totalSupply(), mintAmount * 2);
+        assertEq(pacUsd.balanceOf(alice), mintAmount * 2);
     }
 }

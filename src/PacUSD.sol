@@ -1,19 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { ERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import { ERC20PermitUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ISupraPriceFeeds } from "./interfaces/ISupraPriceFeeds.sol";
-import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /**
  * @title PacUSD Stablecoin
  * @notice A rebasing stablecoin that maintains its peg through wrapper token collateral
+ * @dev This contract is upgradeable using the UUPS pattern
  */
-contract PacUSD is ERC20Permit, ReentrancyGuard, Pausable, AccessControl {
+contract PacUSD is 
+    Initializable, 
+    ERC20PermitUpgradeable, 
+    ReentrancyGuardUpgradeable, 
+    PausableUpgradeable, 
+    AccessControlUpgradeable,
+    UUPSUpgradeable {
     // Custom Errors
     error ZeroAmount();
     error InsufficientBalance(address user, uint256 required, uint256 available);
@@ -26,9 +35,12 @@ contract PacUSD is ERC20Permit, ReentrancyGuard, Pausable, AccessControl {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     // State variables
-    IERC20 public immutable pacMMFWrapper; // The wrapped MMF token used as collateral
-    ISupraPriceFeeds public immutable priceFeeds; // Supra price oracle
-    bytes32 public immutable pairId; // Supra pair ID for price feed
+    IERC20 public pacMMFWrapper; // The wrapped MMF token used as collateral
+    ISupraPriceFeeds public priceFeeds; // Supra price oracle
+    bytes32 public pairId; // Supra pair ID for price feed
+    
+    // Version tracking - defined as constant in each implementation
+    string public constant VERSION = "1.0.0";
 
     uint256 public constant PRICE_DECIMALS = 8; // Supra price feed decimals
 
@@ -41,20 +53,37 @@ contract PacUSD is ERC20Permit, ReentrancyGuard, Pausable, AccessControl {
     event Mint(address indexed user, uint256 collateralAmount, uint256 pacUsdAmount);
     event Burn(address indexed user, uint256 pacUsdAmount, uint256 collateralAmount);
     event Rebase(uint256 oldTotalSupply, uint256 newTotalSupply, uint256 oldSharesPerToken, uint256 newSharesPerToken);
+    event ContractUpgraded(address indexed implementation, string version);
 
     // Internal accounting
     mapping(address => uint256) private _shares;
     uint256 private _totalSupply;
     uint256 private _totalShares;
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @notice Initialize the contract (replaces constructor)
+     * @param _pacMMF Address of the wrapped MMF token used as collateral
+     * @param _priceFeeds Address of the Supra price oracle
+     * @param _pairId Supra pair ID for price feed
+     */
+    function initialize(
         address _pacMMF,
         address _priceFeeds,
-        bytes32 _pairId
-    )
-        ERC20("PAC USD Stablecoin", "PacUSD")
-        ERC20Permit("PAC USD Stablecoin")
-    {
+        bytes32 _pairId,
+        address admin
+    ) public initializer {
+        __ERC20_init("PAC USD Stablecoin", "PacUSD");
+        __ERC20Permit_init("PAC USD Stablecoin");
+        __ReentrancyGuard_init();
+        __Pausable_init();
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+        
         pacMMFWrapper = IERC20(_pacMMF);
         priceFeeds = ISupraPriceFeeds(_priceFeeds);
         pairId = _pairId;
@@ -62,10 +91,10 @@ contract PacUSD is ERC20Permit, ReentrancyGuard, Pausable, AccessControl {
         _totalShares = 0; // Initial total shares should also be 0
         _sharesPerToken = SHARES_PER_TOKEN_PRECISION; // This value will be recalculated on first mint
         _lastRebasePrice = getPacMMFPrice(); // Use actual initial price
-
+        
         // Setup access control
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(PAUSER_ROLE, admin);
     }
 
     /**
@@ -251,5 +280,23 @@ contract PacUSD is ERC20Permit, ReentrancyGuard, Pausable, AccessControl {
     function unpause() external {
         if (!hasRole(PAUSER_ROLE, msg.sender)) revert NotAuthorized();
         _unpause();
+    }
+    
+    /**
+     * @notice Authorizes an upgrade to a new implementation
+     * @dev Only addresses with DEFAULT_ADMIN_ROLE can upgrade the implementation
+     * @param newImplementation Address of the new implementation
+     */
+    function _authorizeUpgrade(address newImplementation) internal override {
+        if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert NotAuthorized();
+    }
+    
+    /**
+     * @notice Emits an event with the current implementation version
+     * @dev This can be called after an upgrade to log the new version
+     */
+    function logVersion() external {
+        if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert NotAuthorized();
+        emit ContractUpgraded(address(this), VERSION);
     }
 }
