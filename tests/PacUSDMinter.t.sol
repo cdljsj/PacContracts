@@ -32,22 +32,15 @@ contract PacUSDMinterTest is Test {
 
         // Deploy PacUSD implementation contract
         PacUSD implementation = new PacUSD();
-        
+
         // Prepare initialization data
         bytes memory initData = abi.encodeWithSelector(
-            PacUSD.initialize.selector,
-            address(pacMMFWrapper),
-            address(priceFeeds),
-            PAIR_ID,
-            address(this)
+            PacUSD.initialize.selector, address(pacMMFWrapper), address(priceFeeds), PAIR_ID, address(this)
         );
-        
+
         // Deploy proxy contract pointing to the implementation
-        ERC1967Proxy proxy = new ERC1967Proxy(
-            address(implementation),
-            initData
-        );
-        
+        ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);
+
         // Cast proxy to PacUSD interface
         pacUsd = PacUSD(address(proxy));
 
