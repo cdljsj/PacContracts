@@ -24,7 +24,7 @@ jobs:
         run: |
           # Install jq if not already installed
           sudo apt-get update && sudo apt-get install -y jq
-          
+
           # Update package.json
           jq --arg name "@$GITHUB_REPOSITORY_OWNER/$GITHUB_REPOSITORY_NAME" \
              --arg desc "$GITHUB_REPOSITORY_DESCRIPTION" \
