@@ -35,6 +35,7 @@ contract PacUSD is
     error NotAuthorized();
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant REBASE_ROLE = keccak256("REBASE_ROLE");
 
     // State variables
     IERC20 public pacMMFWrapper; // The wrapped MMF token used as collateral
@@ -92,6 +93,7 @@ contract PacUSD is
         // Setup access control
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(PAUSER_ROLE, admin);
+        _grantRole(REBASE_ROLE, admin);
     }
 
     /**
@@ -189,7 +191,7 @@ contract PacUSD is
     /**
      * @notice Perform rebase operation to maintain the peg
      */
-    function rebase() external whenNotPaused {
+    function rebase() external whenNotPaused onlyRole(REBASE_ROLE) {
         uint256 currentPrice = getPacMMFPrice();
         // Check if price is zero
         if (currentPrice == 0) return;
