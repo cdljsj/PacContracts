@@ -471,10 +471,10 @@ contract PacUSDTest is Test {
         vm.startPrank(alice);
         vm.expectRevert(abi.encodeWithSignature("EnforcedPause()"));
         pacUsd.mint(100e18);
-        
+
         vm.expectRevert(abi.encodeWithSignature("EnforcedPause()"));
         pacUsd.burn(100e18);
-        
+
         vm.expectRevert(abi.encodeWithSignature("EnforcedPause()"));
         pacUsd.transfer(bob, 100e18);
         vm.stopPrank();
@@ -487,14 +487,14 @@ contract PacUSDTest is Test {
     function test_CalculateMintAmount() public {
         // Test with different prices
         uint256 collateralAmount = 100e18;
-        
+
         // Test with base price ($1.00)
         assertEq(pacUsd.calculateMintAmount(collateralAmount), collateralAmount);
-        
+
         // Test with price $2.00
         priceFeeds.setPrice(2e8);
         assertEq(pacUsd.calculateMintAmount(collateralAmount), collateralAmount * 2);
-        
+
         // Test with price $0.50
         priceFeeds.setPrice(5e7);
         assertEq(pacUsd.calculateMintAmount(collateralAmount), collateralAmount / 2);
@@ -502,14 +502,14 @@ contract PacUSDTest is Test {
 
     function test_CalculateCollateralAmount() public {
         uint256 pacUsdAmount = 100e18;
-        
+
         // Test with base price ($1.00)
         assertEq(pacUsd.calculateCollateralAmount(pacUsdAmount), pacUsdAmount);
-        
+
         // Test with price $2.00
         priceFeeds.setPrice(2e8);
         assertEq(pacUsd.calculateCollateralAmount(pacUsdAmount), pacUsdAmount / 2);
-        
+
         // Test with price $0.50
         priceFeeds.setPrice(5e7);
         assertEq(pacUsd.calculateCollateralAmount(pacUsdAmount), pacUsdAmount * 2);
@@ -519,7 +519,7 @@ contract PacUSDTest is Test {
         // Should not revert with zero total supply
         pacUsd.rebase();
         assertEq(pacUsd.totalSupply(), 0);
-        
+
         // Price change should not affect zero supply
         priceFeeds.setPrice(2e8);
         pacUsd.rebase();
@@ -530,10 +530,10 @@ contract PacUSDTest is Test {
         // First mint some tokens
         vm.prank(alice);
         pacUsd.mint(100e18);
-        
+
         // Set price to zero
         priceFeeds.setPrice(0);
-        
+
         // Rebase should not change supply with zero price
         uint256 supplyBefore = pacUsd.totalSupply();
         pacUsd.rebase();
@@ -542,21 +542,21 @@ contract PacUSDTest is Test {
 
     function test_MintAndBurnWithDifferentPrices() public {
         uint256 initialCollateral = 100e18;
-        
+
         // Mint with base price
         vm.startPrank(alice);
         uint256 mintedAmount = pacUsd.mint(initialCollateral);
         assertEq(mintedAmount, initialCollateral);
-        
+
         // Price doubles
         priceFeeds.setPrice(2e8);
-        
+
         // Burn half the tokens
         uint256 burnAmount = mintedAmount / 2;
         // Should get back quarter of initial collateral (price doubled)
         uint256 expectedCollateral = initialCollateral / 4;
         pacUsd.burn(burnAmount);
-        
+
         assertEq(pacMMFWrapper.balanceOf(alice), INITIAL_BALANCE - initialCollateral + expectedCollateral);
         vm.stopPrank();
     }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@layerzerolabs/oft-evm-upgradeable/contracts/oft/OFTUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { OFTUpgradeable } from "@layerzerolabs/oft-evm-upgradeable/contracts/oft/OFTUpgradeable.sol";
 
 /**
  * @title UpgradeableOFT
@@ -34,5 +34,12 @@ contract UpgradeableOFT is OFTUpgradeable, UUPSUpgradeable {
      * @dev Authorizes an upgrade to a new implementation
      * @param newImplementation Address of the new implementation
      */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    /// @dev Error thrown when zero address is provided for implementation
+    error ZeroImplementationAddress();
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        // This function is required by the UUPSUpgradeable contract
+        // Authorization logic is handled by the onlyOwner modifier
+        if (newImplementation == address(0)) revert ZeroImplementationAddress();
+    }
 }

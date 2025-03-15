@@ -17,17 +17,14 @@ contract DeployPacUSD is BaseScript {
         // Encode initialization data
         bytes memory initData = abi.encodeWithSelector(
             PacUSD.initialize.selector,
-            vm.envAddress("PAC_MMF_WRAPPER"),      // _pacMMF
-            vm.envAddress("SUPRA_PRICE_FEEDS"),    // _priceFeeds
-            vm.envBytes32("SUPRA_PAIR_ID"),        // _pairId
-            vm.envAddress("ADMIN_ADDRESS")         // admin
+            vm.envAddress("PAC_MMF_WRAPPER"), // _pacMMF
+            vm.envAddress("SUPRA_PRICE_FEEDS"), // _priceFeeds
+            vm.envBytes32("SUPRA_PAIR_ID"), // _pairId
+            vm.envAddress("ADMIN_ADDRESS") // admin
         );
 
         // Deploy proxy
-        proxy = address(new ERC1967Proxy(
-            implementation,
-            initData
-        ));
+        proxy = address(new ERC1967Proxy(implementation, initData));
 
         console.log("PacUSD Implementation deployed at:", implementation);
         console.log("PacUSD Proxy deployed at:", proxy);
