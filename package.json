@@ -14,8 +14,6 @@
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
     "prettier": "^3.0.0",
     "solhint": "^3.6.2",
-    "@layerzerolabs/devtools-evm-hardhat": "^2.0.7",
-    "@layerzerolabs/eslint-config-next": "~2.3.39",
     "@layerzerolabs/lz-definitions": "^3.0.59",
     "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.12",
     "@layerzerolabs/lz-evm-protocol-v2": "^3.0.12",
@@ -29,8 +27,7 @@
     "@layerzerolabs/prettier-config-next": "^2.3.39",
     "@layerzerolabs/solhint-config": "^3.0.12",
     "@layerzerolabs/test-devtools-evm-foundry": "~6.0.2",
-    "@layerzerolabs/toolbox-foundry": "~0.1.12",
-    "@layerzerolabs/toolbox-hardhat": "~0.6.8"
+    "@layerzerolabs/toolbox-foundry": "~0.1.12"
   },
   "keywords": [
     "blockchain",
