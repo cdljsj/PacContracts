@@ -26,6 +26,7 @@ contract UpgradeableOFTAdapter is OFTAdapterUpgradeable, UUPSUpgradeable {
      */
     function initialize(address _delegate) public initializer {
         __OFTAdapter_init(_delegate);
+        __Ownable_init(_delegate);
         __UUPSUpgradeable_init();
     }
 
