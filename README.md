@@ -58,6 +58,10 @@ forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
 forge script script/Deploy.s.sol --broadcast --fork-url $MAINNET_RPC_URL
 ```
 
+## Documentation
+
+Detailed documentation for various scripts and deployments can be found in the [docs/scripts](docs/scripts) directory.
+
 ## License
 
 This project is licensed under MIT.
