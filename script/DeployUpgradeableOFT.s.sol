@@ -27,7 +27,7 @@ contract DeployUpgradeableOFT is BaseScript {
 
         // The proxy address is the address users will interact with
         proxyAddress = address(proxy);
-        
+
         console.log("Implementation deployed at:", address(implementation));
         console.log("Proxy deployed at:", proxyAddress);
         console.log("Token Name:", tokenName);

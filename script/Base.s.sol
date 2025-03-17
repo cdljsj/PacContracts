@@ -9,11 +9,11 @@ abstract contract BaseScript is Script {
 
     /// @dev Needed for the deterministic deployments.
     bytes32 internal constant ZERO_SALT = bytes32(0);
-    
+
     /// @dev Chain IDs for cross-chain configuration
-    uint32 internal constant ETHEREUM_SEPOLIA_CHAIN_ID = 40161;
-    uint32 internal constant BASE_SEPOLIA_CHAIN_ID = 40152;
-    uint32 internal constant ARBITRUM_SEPOLIA_CHAIN_ID = 40231;
+    uint32 internal constant ETHEREUM_SEPOLIA_CHAIN_ID = 40_161;
+    uint32 internal constant BASE_SEPOLIA_CHAIN_ID = 40_152;
+    uint32 internal constant ARBITRUM_SEPOLIA_CHAIN_ID = 40_231;
 
     /// @dev The address of the transaction broadcaster.
     address internal broadcaster;

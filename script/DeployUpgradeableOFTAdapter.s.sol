@@ -18,15 +18,14 @@ contract DeployUpgradeableOFTAdapter is BaseScript {
         UpgradeableOFTAdapter implementation = new UpgradeableOFTAdapter(tokenAddress, lzEndpoint);
 
         // Prepare initialization data
-        bytes memory initData =
-            abi.encodeWithSelector(UpgradeableOFTAdapter.initialize.selector, owner);
+        bytes memory initData = abi.encodeWithSelector(UpgradeableOFTAdapter.initialize.selector, owner);
 
         // Deploy ERC1967Proxy (UUPS pattern)
         ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);
 
         // The proxy address is the address users will interact with
         proxyAddress = address(proxy);
-        
+
         console.log("Implementation deployed at:", address(implementation));
         console.log("Proxy deployed at:", proxyAddress);
         console.log("Token being wrapped:", tokenAddress);

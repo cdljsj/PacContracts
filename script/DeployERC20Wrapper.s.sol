@@ -18,7 +18,7 @@ contract DeployERC20Wrapper is BaseScript {
         } catch {
             revert("UNDERLYING_TOKEN_ADDRESS environment variable not set");
         }
-        
+
         // Get wrapper token name and symbol from environment variables or use defaults
         string memory wrapperName;
         try vm.envString("WRAPPER_NAME") returns (string memory name) {
@@ -32,7 +32,7 @@ contract DeployERC20Wrapper is BaseScript {
                 wrapperName = "Wrapped Token";
             }
         }
-        
+
         string memory wrapperSymbol;
         try vm.envString("WRAPPER_SYMBOL") returns (string memory symbol) {
             wrapperSymbol = symbol;
@@ -44,22 +44,18 @@ contract DeployERC20Wrapper is BaseScript {
                 wrapperSymbol = "wTKN";
             }
         }
-        
+
         // Deploy the ERC20Wrapper contract
-        ERC20Wrapper wrapper = new ERC20Wrapper(
-            IERC20(underlyingTokenAddress),
-            wrapperName,
-            wrapperSymbol
-        );
+        ERC20Wrapper wrapper = new ERC20Wrapper(IERC20(underlyingTokenAddress), wrapperName, wrapperSymbol);
         wrapperAddress = address(wrapper);
-        
+
         // Log deployment information
         console.log("ERC20Wrapper deployed to Sepolia:");
         console.log("Wrapper Address:", wrapperAddress);
         console.log("Underlying Token:", underlyingTokenAddress);
         console.log("Wrapper Name:", wrapperName);
         console.log("Wrapper Symbol:", wrapperSymbol);
-        
+
         // Optional: Deposit some tokens into the wrapper if specified
         uint256 initialDeposit;
         try vm.envUint("INITIAL_DEPOSIT") returns (uint256 amount) {
@@ -67,12 +63,12 @@ contract DeployERC20Wrapper is BaseScript {
         } catch {
             initialDeposit = 0;
         }
-        
+
         if (initialDeposit > 0) {
             // Check if the deployer has approved the wrapper to spend tokens
             IERC20 underlyingToken = IERC20(underlyingTokenAddress);
             uint256 allowance = underlyingToken.allowance(broadcaster, wrapperAddress);
-            
+
             if (allowance < initialDeposit) {
                 console.log("Note: To deposit tokens, you need to approve the wrapper contract first.");
                 console.log("Run this command to approve:");
@@ -89,7 +85,7 @@ contract DeployERC20Wrapper is BaseScript {
                 }
             }
         }
-        
+
         return wrapperAddress;
     }
 }
