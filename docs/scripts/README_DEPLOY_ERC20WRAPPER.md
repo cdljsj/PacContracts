@@ -5,6 +5,7 @@ This document provides detailed instructions on how to use the `DeployERC20Wrapp
 ## Overview
 
 The ERC20Wrapper contract can wrap any existing ERC20 token into a new token with additional functionality, including:
+
 - ERC20Permit support (no separate approval transaction needed)
 - Batch operation support
 - Token deposit and withdrawal functions
@@ -65,7 +66,8 @@ forge verify-contract <DEPLOYED_CONTRACT_ADDRESS> src/ERC20Wrapper.sol:ERC20Wrap
 ```
 
 Replace `<DEPLOYED_CONTRACT_ADDRESS>` with the address of your deployed wrapper contract. The other parameters will be taken from your environment variables.
-```
+
+````
 
 ## Post-Deployment Operations
 
@@ -76,10 +78,10 @@ Replace `<DEPLOYED_CONTRACT_ADDRESS>` with the address of your deployed wrapper 
    ```bash
    # First approve the ERC20Wrapper contract to use your tokens
    cast send $UNDERLYING_TOKEN_ADDRESS "approve(address,uint256)" $WRAPPER_ADDRESS DEPOSIT_AMOUNT --from YOUR_ADDRESS --private-key YOUR_PRIVATE_KEY
-   
+
    # Then deposit tokens
    cast send $WRAPPER_ADDRESS "deposit(uint256)" DEPOSIT_AMOUNT --from YOUR_ADDRESS --private-key YOUR_PRIVATE_KEY
-   ```
+````
 
 3. **Verify Contract**: Verify the contract on Etherscan so users can interact with it.
 
@@ -88,10 +90,12 @@ Replace `<DEPLOYED_CONTRACT_ADDRESS>` with the address of your deployed wrapper 
 The wrapped token provides the following main functions:
 
 1. **Deposit Original Tokens**:
+
    - `deposit(uint256 amount)`: Deposit original tokens and receive an equal amount of wrapped tokens
    - `depositFor(address from, address to, uint256 amount)`: Deposit tokens on behalf of someone else
 
 2. **Withdraw Original Tokens**:
+
    - `withdraw(uint256 amount)`: Burn wrapped tokens and withdraw original tokens
    - `withdrawTo(address to, uint256 amount)`: Withdraw original tokens to a specified address
 
@@ -108,11 +112,13 @@ The wrapped token provides the following main functions:
 ## Troubleshooting
 
 1. **Deployment Failure**:
+
    - Check if your RPC URL is correct
    - Ensure you have enough ETH to pay for transaction fees
    - Verify that environment variables are set correctly
 
 2. **Deposit Failure**:
+
    - Make sure you have approved the ERC20Wrapper contract to use your tokens
    - Check if your original token balance is sufficient
 

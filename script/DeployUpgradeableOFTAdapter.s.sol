@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import { Script } from "forge-std/src/Script.sol";
 import { console } from "forge-std/src/console.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "../src/UpgradeableOFTAdapter.sol";

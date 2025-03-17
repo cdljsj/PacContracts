@@ -8,6 +8,7 @@ out
 # files
 *.env
 *.log
+*.sol
 .DS_Store
 .pnp.*
 bun.lockb

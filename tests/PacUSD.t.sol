@@ -7,12 +7,10 @@ import { MockSupraPriceFeeds } from "./mocks/MockSupraPriceFeeds.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+// IERC20 import removed as it's not used
 
 contract PacUSDTest is Test {
-    uint256 constant SHARES_PER_TOKEN_PRECISION = 1e18;
     // Events for checking invariants
-
     event SupplyChanged(uint256 oldSupply, uint256 newSupply);
     event SharesChanged(uint256 oldShares, uint256 newShares);
 

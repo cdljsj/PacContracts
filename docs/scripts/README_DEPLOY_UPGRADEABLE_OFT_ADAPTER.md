@@ -84,4 +84,3 @@ Replace `<IMPLEMENTATION_ADDRESS>` with the address of your deployed implementat
 - The implementation contract contains the logic but should not be interacted with directly.
 - This contract follows the UUPS upgradeable pattern, which means the upgrade logic is in the implementation contract, not in the proxy.
 - Ensure the private key of the address with upgrade permissions is stored securely.
-

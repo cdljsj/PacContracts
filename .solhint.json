@@ -6,9 +6,16 @@
     "func-name-mixedcase": "off",
     "func-visibility": ["error", { "ignoreConstructors": true }],
     "max-line-length": ["error", 120],
-    "named-parameters-mapping": "warn",
+    "named-parameters-mapping": "off",
     "no-console": "off",
     "not-rely-on-time": "off",
-    "one-contract-per-file": "off"
+    "one-contract-per-file": "off",
+    "immutable-vars-naming": "off",
+    "no-unused-import": "warn",
+    "no-global-import": "off",
+    "custom-errors": "off",
+    "reason-string": "off",
+    "avoid-low-level-calls": "off",
+    "check-send-result": "warn"
   }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.28;
 
-import { Script } from "forge-std/src/Script.sol";
+// Script import removed as it's not used
 import { console } from "forge-std/src/console.sol";
 import { ERC20Wrapper } from "../src/ERC20Wrapper.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";

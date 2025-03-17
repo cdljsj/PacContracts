@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.28;
 
-import { Script } from "forge-std/src/Script.sol";
+// Script import removed as it's not used
 import { console } from "forge-std/src/console.sol";
 import { MockERC20 } from "../tests/mocks/MockERC20.sol";
 import { BaseScript } from "./Base.s.sol";

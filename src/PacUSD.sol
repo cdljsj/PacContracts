@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+// ERC20PermitUpgradeable already includes ERC20Upgradeable
 import { ERC20PermitUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
@@ -284,9 +284,8 @@ contract PacUSD is
     /**
      * @notice Authorizes an upgrade to a new implementation
      * @dev Only addresses with DEFAULT_ADMIN_ROLE can upgrade the implementation
-     * @param newImplementation Address of the new implementation
      */
-    function _authorizeUpgrade(address newImplementation) internal override {
+    function _authorizeUpgrade(address /* newImpl */) internal view override {
         if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert NotAuthorized();
     }
 
