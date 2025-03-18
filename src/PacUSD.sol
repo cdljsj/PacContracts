@@ -285,7 +285,7 @@ contract PacUSD is
      * @notice Authorizes an upgrade to a new implementation
      * @dev Only addresses with DEFAULT_ADMIN_ROLE can upgrade the implementation
      */
-    function _authorizeUpgrade(address /* newImpl */) internal view override {
+    function _authorizeUpgrade(address /* newImpl */ ) internal view override {
         if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert NotAuthorized();
     }
 

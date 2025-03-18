@@ -11,11 +11,11 @@
     "not-rely-on-time": "off",
     "one-contract-per-file": "off",
     "immutable-vars-naming": "off",
-    "no-unused-import": "warn",
+    "no-unused-import": "off",
     "no-global-import": "off",
     "custom-errors": "off",
     "reason-string": "off",
     "avoid-low-level-calls": "off",
-    "check-send-result": "warn"
+    "check-send-result": "off"
   }
 }
